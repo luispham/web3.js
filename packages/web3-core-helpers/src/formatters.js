@@ -163,12 +163,16 @@ var _txInputFormatter = function (options) {
         throw new Error("The data field must be HEX encoded data.");
     }
 
+    if (options.timestamp) {
+        options.timestamp = utils.stringToHex(options.timestamp);
+    }
+
     // allow both
     if (options.gas || options.gasLimit) {
         options.gas = options.gas || options.gasLimit;
     }
 
-    ["gasPrice", "gas", "value", "nonce", "timestamp"]
+    ["gasPrice", "gas", "value", "nonce"]
         .filter(function (key) {
             return options[key] !== undefined;
         })
