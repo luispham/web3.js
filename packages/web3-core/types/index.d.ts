@@ -126,6 +126,7 @@ export interface Transaction {
     gasPrice: string;
     gas: number;
     input: string;
+    timestamp: string | null
 }
 
 export interface TransactionConfig {
@@ -140,6 +141,7 @@ export interface TransactionConfig {
     common?: Common;
     chain?: string;
     hardfork?: string;
+    timestamp?: string
 }
 
 export type chain =
@@ -185,6 +187,7 @@ export interface RLPEncodedTransaction {
         s: string;
         v: string;
         hash: string;
+        timestamp: string
     };
 }
 

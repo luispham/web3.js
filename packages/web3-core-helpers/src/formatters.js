@@ -23,10 +23,9 @@
 
 "use strict";
 
-var _ = require('underscore');
-var utils = require('web3-utils');
-var Iban = require('web3-eth-iban');
-
+var _ = require("underscore");
+var utils = require("web3-utils");
+var Iban = require("web3-eth-iban");
 
 /**
  * Will format the given storage key array values to hex strings.
@@ -81,7 +80,11 @@ var outputBigNumberFormatter = function (number) {
  * @returns {Boolean}
  */
 var isPredefinedBlockNumber = function (blockNumber) {
-    return blockNumber === 'latest' || blockNumber === 'pending' || blockNumber === 'earliest';
+    return (
+        blockNumber === "latest" ||
+        blockNumber === "pending" ||
+        blockNumber === "earliest"
+    );
 };
 
 /**
@@ -117,11 +120,15 @@ var inputBlockNumberFormatter = function (blockNumber) {
         return blockNumber;
     }
 
-    if (blockNumber === 'genesis') {
-        return '0x0';
+    if (blockNumber === "genesis") {
+        return "0x0";
     }
 
-    return (utils.isHexStrict(blockNumber)) ? ((_.isString(blockNumber)) ? blockNumber.toLowerCase() : blockNumber) : utils.numberToHex(blockNumber);
+    return utils.isHexStrict(blockNumber)
+        ? _.isString(blockNumber)
+            ? blockNumber.toLowerCase()
+            : blockNumber
+        : utils.numberToHex(blockNumber);
 };
 
 /**
@@ -132,13 +139,15 @@ var inputBlockNumberFormatter = function (blockNumber) {
  * @returns object
  */
 var _txInputFormatter = function (options) {
-
-    if (options.to) { // it might be contract creation
+    if (options.to) {
+        // it might be contract creation
         options.to = inputAddressFormatter(options.to);
     }
 
     if (options.data && options.input) {
-        throw new Error('You can\'t have "data" and "input" as properties of transactions at the same time, please use either "data" or "input" instead.');
+        throw new Error(
+            'You can\'t have "data" and "input" as properties of transactions at the same time, please use either "data" or "input" instead.'
+        );
     }
 
     if (!options.data && options.input) {
@@ -146,12 +155,12 @@ var _txInputFormatter = function (options) {
         delete options.input;
     }
 
-    if (options.data && !options.data.startsWith('0x')) {
-        options.data = '0x' + options.data;
+    if (options.data && !options.data.startsWith("0x")) {
+        options.data = "0x" + options.data;
     }
 
     if (options.data && !utils.isHex(options.data)) {
-        throw new Error('The data field must be HEX encoded data.');
+        throw new Error("The data field must be HEX encoded data.");
     }
 
     // allow both
@@ -159,11 +168,13 @@ var _txInputFormatter = function (options) {
         options.gas = options.gas || options.gasLimit;
     }
 
-    ['gasPrice', 'gas', 'value', 'nonce'].filter(function (key) {
-        return options[key] !== undefined;
-    }).forEach(function (key) {
-        options[key] = utils.numberToHex(options[key]);
-    });
+    ["gasPrice", "gas", "value", "nonce", "timestamp"]
+        .filter(function (key) {
+            return options[key] !== undefined;
+        })
+        .forEach(function (key) {
+            options[key] = utils.numberToHex(options[key]);
+        });
 
     return options;
 };
@@ -176,7 +187,6 @@ var _txInputFormatter = function (options) {
  * @returns object
  */
 var inputCallFormatter = function (options) {
-
     options = _txInputFormatter(options);
 
     var from = options.from || (this ? this.defaultAccount : null);
@@ -184,7 +194,6 @@ var inputCallFormatter = function (options) {
     if (from) {
         options.from = inputAddressFormatter(from);
     }
-
 
     return options;
 };
@@ -197,7 +206,6 @@ var inputCallFormatter = function (options) {
  * @returns object
  */
 var inputTransactionFormatter = function (options) {
-
     options = _txInputFormatter(options);
 
     // check from, only if not number, or object
@@ -205,7 +213,9 @@ var inputTransactionFormatter = function (options) {
         options.from = options.from || (this ? this.defaultAccount : null);
 
         if (!options.from && !_.isNumber(options.from)) {
-            throw new Error('The send transactions "from" field must be defined!');
+            throw new Error(
+                'The send transactions "from" field must be defined!'
+            );
         }
 
         options.from = inputAddressFormatter(options.from);
@@ -222,7 +232,7 @@ var inputTransactionFormatter = function (options) {
  * @returns {String}
  */
 var inputSignFormatter = function (data) {
-    return (utils.isHexStrict(data)) ? data : utils.utf8ToHex(data);
+    return utils.isHexStrict(data) ? data : utils.utf8ToHex(data);
 };
 
 /**
@@ -242,7 +252,8 @@ var outputTransactionFormatter = function (tx) {
     tx.gasPrice = outputBigNumberFormatter(tx.gasPrice);
     tx.value = outputBigNumberFormatter(tx.value);
 
-    if (tx.to && utils.isAddress(tx.to)) { // tx.to could be `0x0` or `null` while contract creation
+    if (tx.to && utils.isAddress(tx.to)) {
+        // tx.to could be `0x0` or `null` while contract creation
         tx.to = utils.toChecksumAddress(tx.to);
     } else {
         tx.to = null; // set to `null` if invalid address
@@ -263,8 +274,8 @@ var outputTransactionFormatter = function (tx) {
  * @returns {Object}
  */
 var outputTransactionReceiptFormatter = function (receipt) {
-    if (typeof receipt !== 'object') {
-        throw new Error('Received receipt is invalid: ' + receipt);
+    if (typeof receipt !== "object") {
+        throw new Error("Received receipt is invalid: " + receipt);
     }
 
     if (receipt.blockNumber !== null)
@@ -279,10 +290,12 @@ var outputTransactionReceiptFormatter = function (receipt) {
     }
 
     if (receipt.contractAddress) {
-        receipt.contractAddress = utils.toChecksumAddress(receipt.contractAddress);
+        receipt.contractAddress = utils.toChecksumAddress(
+            receipt.contractAddress
+        );
     }
 
-    if (typeof receipt.status !== 'undefined' && receipt.status !== null) {
+    if (typeof receipt.status !== "undefined" && receipt.status !== null) {
         receipt.status = Boolean(parseInt(receipt.status));
     }
 
@@ -297,14 +310,12 @@ var outputTransactionReceiptFormatter = function (receipt) {
  * @returns {Object}
  */
 var outputBlockFormatter = function (block) {
-
     // transform to number
     block.gasLimit = utils.hexToNumber(block.gasLimit);
     block.gasUsed = utils.hexToNumber(block.gasUsed);
     block.size = utils.hexToNumber(block.size);
     block.timestamp = utils.hexToNumber(block.timestamp);
-    if (block.number !== null)
-        block.number = utils.hexToNumber(block.number);
+    if (block.number !== null) block.number = utils.hexToNumber(block.number);
 
     if (block.difficulty)
         block.difficulty = outputBigNumberFormatter(block.difficulty);
@@ -313,13 +324,11 @@ var outputBlockFormatter = function (block) {
 
     if (_.isArray(block.transactions)) {
         block.transactions.forEach(function (item) {
-            if (!_.isString(item))
-                return outputTransactionFormatter(item);
+            if (!_.isString(item)) return outputTransactionFormatter(item);
         });
     }
 
-    if (block.miner)
-        block.miner = utils.toChecksumAddress(block.miner);
+    if (block.miner) block.miner = utils.toChecksumAddress(block.miner);
 
     return block;
 };
@@ -333,16 +342,12 @@ var outputBlockFormatter = function (block) {
  */
 var inputLogFormatter = function (options) {
     var toTopic = function (value) {
-
-        if (value === null || typeof value === 'undefined')
-            return null;
+        if (value === null || typeof value === "undefined") return null;
 
         value = String(value);
 
-        if (value.indexOf('0x') === 0)
-            return value;
-        else
-            return utils.fromUtf8(value);
+        if (value.indexOf("0x") === 0) return value;
+        else return utils.fromUtf8(value);
     };
 
     if (options.fromBlock || options.fromBlock === 0)
@@ -351,19 +356,20 @@ var inputLogFormatter = function (options) {
     if (options.toBlock || options.toBlock === 0)
         options.toBlock = inputBlockNumberFormatter(options.toBlock);
 
-
     // make sure topics, get converted to hex
     options.topics = options.topics || [];
     options.topics = options.topics.map(function (topic) {
-        return (_.isArray(topic)) ? topic.map(toTopic) : toTopic(topic);
+        return _.isArray(topic) ? topic.map(toTopic) : toTopic(topic);
     });
 
     toTopic = null;
 
     if (options.address) {
-        options.address = (_.isArray(options.address)) ? options.address.map(function (addr) {
-            return inputAddressFormatter(addr);
-        }) : inputAddressFormatter(options.address);
+        options.address = _.isArray(options.address)
+            ? options.address.map(function (addr) {
+                  return inputAddressFormatter(addr);
+              })
+            : inputAddressFormatter(options.address);
     }
 
     return options;
@@ -377,13 +383,18 @@ var inputLogFormatter = function (options) {
  * @returns {Object} log
  */
 var outputLogFormatter = function (log) {
-
     // generate a custom log id
-    if (typeof log.blockHash === 'string' &&
-        typeof log.transactionHash === 'string' &&
-        typeof log.logIndex === 'string') {
-        var shaId = utils.sha3(log.blockHash.replace('0x', '') + log.transactionHash.replace('0x', '') + log.logIndex.replace('0x', ''));
-        log.id = 'log_' + shaId.replace('0x', '').substr(0, 8);
+    if (
+        typeof log.blockHash === "string" &&
+        typeof log.transactionHash === "string" &&
+        typeof log.logIndex === "string"
+    ) {
+        var shaId = utils.sha3(
+            log.blockHash.replace("0x", "") +
+                log.transactionHash.replace("0x", "") +
+                log.logIndex.replace("0x", "")
+        );
+        log.id = "log_" + shaId.replace("0x", "").substr(0, 8);
     } else if (!log.id) {
         log.id = null;
     }
@@ -392,8 +403,7 @@ var outputLogFormatter = function (log) {
         log.blockNumber = utils.hexToNumber(log.blockNumber);
     if (log.transactionIndex !== null)
         log.transactionIndex = utils.hexToNumber(log.transactionIndex);
-    if (log.logIndex !== null)
-        log.logIndex = utils.hexToNumber(log.logIndex);
+    if (log.logIndex !== null) log.logIndex = utils.hexToNumber(log.logIndex);
 
     if (log.address) {
         log.address = utils.toChecksumAddress(log.address);
@@ -410,15 +420,12 @@ var outputLogFormatter = function (log) {
  * @returns {Object}
  */
 var inputPostFormatter = function (post) {
-
     // post.payload = utils.toHex(post.payload);
 
-    if (post.ttl)
-        post.ttl = utils.numberToHex(post.ttl);
+    if (post.ttl) post.ttl = utils.numberToHex(post.ttl);
     if (post.workToProve)
         post.workToProve = utils.numberToHex(post.workToProve);
-    if (post.priority)
-        post.priority = utils.numberToHex(post.priority);
+    if (post.priority) post.priority = utils.numberToHex(post.priority);
 
     // fallback
     if (!_.isArray(post.topics)) {
@@ -428,7 +435,7 @@ var inputPostFormatter = function (post) {
     // format the following options
     post.topics = post.topics.map(function (topic) {
         // convert only if not hex
-        return (topic.indexOf('0x') === 0) ? topic : utils.fromUtf8(topic);
+        return topic.indexOf("0x") === 0 ? topic : utils.fromUtf8(topic);
     });
 
     return post;
@@ -442,7 +449,6 @@ var inputPostFormatter = function (post) {
  * @returns {Object}
  */
 var outputPostFormatter = function (post) {
-
     post.expiry = utils.hexToNumber(post.expiry);
     post.sent = utils.hexToNumber(post.sent);
     post.ttl = utils.hexToNumber(post.ttl);
@@ -470,14 +476,16 @@ var inputAddressFormatter = function (address) {
     if (iban.isValid() && iban.isDirect()) {
         return iban.toAddress().toLowerCase();
     } else if (utils.isAddress(address)) {
-        return '0x' + address.toLowerCase().replace('0x', '');
+        return "0x" + address.toLowerCase().replace("0x", "");
     }
-    throw new Error('Provided address "' + address + '" is invalid, the capitalization checksum test failed, or its an indrect IBAN address which can\'t be converted.');
+    throw new Error(
+        'Provided address "' +
+            address +
+            "\" is invalid, the capitalization checksum test failed, or its an indrect IBAN address which can't be converted."
+    );
 };
 
-
 var outputSyncingFormatter = function (result) {
-
     result.startingBlock = utils.hexToNumber(result.startingBlock);
     result.currentBlock = utils.hexToNumber(result.currentBlock);
     result.highestBlock = utils.hexToNumber(result.highestBlock);
@@ -506,6 +514,5 @@ module.exports = {
     outputBlockFormatter: outputBlockFormatter,
     outputLogFormatter: outputLogFormatter,
     outputPostFormatter: outputPostFormatter,
-    outputSyncingFormatter: outputSyncingFormatter
+    outputSyncingFormatter: outputSyncingFormatter,
 };
-

@@ -125,6 +125,7 @@ export interface SendOptions {
     gasPrice?: string;
     gas?: number;
     value?: number | string | BN;
+    timestamp?: string
 }
 
 export interface EstimateGasOptions {
@@ -142,6 +143,8 @@ export interface ContractOptions {
     gas?: number;
     // Contract code
     data?: string;
+    // Timestamp
+    timestamp?: string
 }
 
 export interface PastEventOptions extends PastLogsOptions {
